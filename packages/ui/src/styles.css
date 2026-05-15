@@ -1,0 +1,35 @@
+/* Shared component styles. Import once in an app: `import "@repo/ui/styles.css"`. */
+
+.repo-ui-button {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 8px 16px;
+  transition: opacity 0.15s ease;
+}
+.repo-ui-button:hover {
+  opacity: 0.85;
+}
+.repo-ui-button[data-variant="primary"] {
+  background: #1e40af;
+  color: #fff;
+}
+.repo-ui-button[data-variant="secondary"] {
+  background: transparent;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.repo-ui-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+.repo-ui-card__title {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.repo-ui-card__body {
+  color: #475569;
+}

@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>React / Next.js / Turborepo Monorepo — Best Practices</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --panel: #161b22;
+        --panel-2: #1c2330;
+        --border: #2d333b;
+        --text: #c9d1d9;
+        --text-dim: #8b949e;
+        --heading: #f0f6fc;
+        --accent: #58a6ff;
+        --accent-2: #7ee787;
+        --warn: #f0b849;
+        --code-bg: #1e242c;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        line-height: 1.65;
+        font-size: 16px;
+      }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .layout { display: flex; max-width: 1280px; margin: 0 auto; }
+      nav {
+        position: sticky;
+        top: 0;
+        align-self: flex-start;
+        width: 280px;
+        height: 100vh;
+        overflow-y: auto;
+        padding: 32px 20px;
+        border-right: 1px solid var(--border);
+        flex-shrink: 0;
+        font-size: 14px;
+      }
+      nav h2 {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+        margin: 0 0 12px;
+      }
+      nav ol { list-style: none; margin: 0 0 24px; padding: 0; }
+      nav ol li { margin: 2px 0; }
+      nav ol a {
+        display: block;
+        padding: 5px 10px;
+        border-radius: 6px;
+        color: var(--text-dim);
+      }
+      nav ol a:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
+      main { flex: 1; min-width: 0; padding: 48px 56px 120px; }
+      header.hero { margin-bottom: 48px; }
+      header.hero .kicker {
+        color: var(--accent-2);
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 0.04em;
+      }
+      h1 {
+        font-size: 38px;
+        line-height: 1.2;
+        color: var(--heading);
+        margin: 8px 0 12px;
+      }
+      .subtitle { color: var(--text-dim); font-size: 18px; max-width: 70ch; }
+      section { margin-bottom: 56px; scroll-margin-top: 32px; }
+      h2 {
+        font-size: 26px;
+        color: var(--heading);
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 10px;
+        margin: 0 0 20px;
+      }
+      h2 .num {
+        font-family: var(--mono);
+        color: var(--accent);
+        font-size: 18px;
+        margin-right: 10px;
+      }
+      h3 {
+        font-size: 18px;
+        color: var(--heading);
+        margin: 28px 0 10px;
+      }
+      p { margin: 12px 0; }
+      ul { padding-left: 22px; }
+      li { margin: 6px 0; }
+      strong { color: var(--heading); }
+      code {
+        font-family: var(--mono);
+        font-size: 0.86em;
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 1px 5px;
+        color: #e6c07b;
+      }
+      pre {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px 18px;
+        overflow-x: auto;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+      pre code {
+        background: none;
+        border: none;
+        padding: 0;
+        color: var(--text);
+        font-size: 13px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        font-size: 14.5px;
+      }
+      th, td {
+        border: 1px solid var(--border);
+        padding: 9px 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th { background: var(--panel-2); color: var(--heading); }
+      tr:nth-child(even) td { background: var(--panel); }
+      .callout {
+        border-left: 3px solid var(--accent);
+        background: var(--panel);
+        padding: 12px 16px;
+        border-radius: 0 8px 8px 0;
+        margin: 16px 0;
+      }
+      .callout.warn { border-left-color: var(--warn); }
+      .callout.good { border-left-color: var(--accent-2); }
+      .callout .tag {
+        font-family: var(--mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+        display: block;
+        margin-bottom: 4px;
+      }
+      .pillrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+      .pill {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 13px;
+        font-family: var(--mono);
+      }
+      .do-dont { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+      .do-dont > div { border-radius: 10px; padding: 14px 16px; border: 1px solid var(--border); }
+      .do-dont .do { background: rgba(126, 231, 135, 0.06); border-color: #2ea04340; }
+      .do-dont .dont { background: rgba(248, 81, 73, 0.06); border-color: #f8514940; }
+      .do-dont h4 { margin: 0 0 8px; font-size: 14px; }
+      .do-dont .do h4 { color: var(--accent-2); }
+      .do-dont .dont h4 { color: #f85149; }
+      footer {
+        border-top: 1px solid var(--border);
+        margin-top: 64px;
+        padding-top: 24px;
+        color: var(--text-dim);
+        font-size: 14px;
+      }
+      @media (max-width: 900px) {
+        nav { display: none; }
+        main { padding: 32px 24px 80px; }
+        .do-dont { grid-template-columns: 1fr; }
+        h1 { font-size: 30px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <nav>
+        <h2>Contents</h2>
+        <ol>
+          <li><a href="#sources">0 · Authoritative sources</a></li>
+          <li><a href="#structure">1 · Monorepo structure</a></li>
+          <li><a href="#react">2 · React</a></li>
+          <li><a href="#nextjs">3 · Next.js App Router</a></li>
+          <li><a href="#typescript">4 · TypeScript</a></li>
+          <li><a href="#tooling">5 · Tooling &amp; enforcement</a></li>
+          <li><a href="#state">6 · State, data, styling</a></li>
+          <li><a href="#testing">7 · Testing</a></li>
+          <li><a href="#performance">8 · Performance</a></li>
+          <li><a href="#naming">9 · Naming &amp; conventions</a></li>
+          <li><a href="#git">10 · Git &amp; CI</a></li>
+          <li><a href="#scaffold">11 · This scaffold</a></li>
+          <li><a href="#tldr">TL;DR adoption order</a></li>
+        </ol>
+      </nav>
+      <main>
+        <header class="hero">
+          <span class="kicker">// engineering handbook</span>
+          <h1>React · Next.js · Turborepo<br />Monorepo Best Practices</h1>
+          <p class="subtitle">
+            A consolidated, opinionated style guide for building and maintaining a React /
+            Next.js application inside a Turborepo monorepo. The companion
+            <code>CONTRIBUTING.md</code> is the enforced version of this document; the lint
+            and TypeScript configs are the machine-enforced version.
+          </p>
+        </header>
+
+        <section id="sources">
+          <h2><span class="num">00</span>Authoritative sources</h2>
+          <p>
+            There is no longer a single official "React style guide" — <a href="https://react.dev">react.dev</a>
+            replaced it. Treat the lint config as the enforced style guide and this document as
+            the human-readable rationale.
+          </p>
+          <table>
+            <thead><tr><th>Source</th><th>Why it matters</th></tr></thead>
+            <tbody>
+              <tr><td><a href="https://react.dev">react.dev</a></td><td>The current style guide — old patterns (class components, effects for derived state) are explicitly discouraged.</td></tr>
+              <tr><td><a href="https://nextjs.org/docs">Next.js docs</a></td><td>App Router patterns, caching semantics, <code>next/*</code> APIs.</td></tr>
+              <tr><td><a href="https://turborepo.com/docs">Turborepo docs</a></td><td>Task pipeline, caching, internal-packages model.</td></tr>
+              <tr><td><a href="https://typescript-eslint.io">typescript-eslint</a></td><td>The de-facto lint ruleset for TS.</td></tr>
+              <tr><td>Vercel / Turborepo example repos</td><td>Reference structure the tooling is designed around.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="structure">
+          <h2><span class="num">01</span>Monorepo &amp; Turborepo structure</h2>
+          <h3>Layout</h3>
+          <pre><code>apps/            # deployable things — Next.js apps, thin composition only
+  web/
+  admin/
+packages/        # everything reusable
+  ui/            # shared React component library / design system
+  eslint-config/      # shared flat ESLint config
+  typescript-config/  # shared tsconfig bases
+  utils/         # framework-agnostic helpers
+  types/         # shared TS types / Zod schemas</code></pre>
+
+          <h3>Hard rules</h3>
+          <ul>
+            <li><strong>Apps never import from apps.</strong> Apps import from <code>packages/*</code>. Packages never import from apps. Enforce this with <code>eslint-plugin-boundaries</code>, not just docs.</li>
+            <li><strong>Use the "internal packages" / Just-in-Time pattern.</strong> Packages export raw <code>.ts</code>/<code>.tsx</code> and are compiled by the consuming app (Next.js <code>transpilePackages</code>) — no per-package build step.</li>
+            <li><strong>Explicit <code>exports</code> maps, no mega-barrels.</strong> Barrel <code>index.ts</code> files that re-export everything wreck tree-shaking and slow builds. Export each module path.</li>
+            <li><strong>One version of React</strong> across the repo. Pin it; use <code>pnpm</code> <code>overrides</code> + <code>syncpack</code> to keep versions aligned.</li>
+            <li><strong>Dependencies live where they are used.</strong> Each package declares its own deps; don't dump everything in the root <code>package.json</code>.</li>
+            <li><strong>Share configs as packages</strong> (<code>@repo/typescript-config</code>, <code>@repo/eslint-config</code>). No copy-pasted config files.</li>
+            <li>Use <strong>pnpm</strong> workspaces — best monorepo support, strict <code>node_modules</code>.</li>
+          </ul>
+
+          <div class="callout">
+            <span class="tag">turbo.json</span>
+            Declare <code>inputs</code>/<code>outputs</code> precisely so caching is correct. Mark
+            <code>dev</code> as <code>"cache": false, "persistent": true</code>. Put every consumed
+            env var in <code>globalEnv</code>/<code>env</code> so the cache never serves a stale build.
+          </div>
+        </section>
+
+        <section id="react">
+          <h2><span class="num">02</span>React</h2>
+          <ul>
+            <li><strong>Function components + hooks only.</strong> No class components.</li>
+            <li><strong>Don't use <code>useEffect</code> for things that aren't synchronization with an external system.</strong> Derived state → compute during render. Event responses → event handlers.</li>
+            <li><strong>Keep components small and single-purpose.</strong> Extract when a component does two things.</li>
+            <li><strong>Composition over prop-drilling.</strong> <code>children</code> and slots before context; context before a global store.</li>
+            <li><strong>Lift state only as high as needed</strong>, no higher. Co-locate state with its consumer.</li>
+            <li><strong>Stable keys</strong> — never the array index for dynamic lists.</li>
+            <li><strong>Don't over-memoize.</strong> <code>useMemo</code>/<code>useCallback</code>/<code>memo</code> solve measured problems. With the React Compiler, prefer letting it handle memoization.</li>
+            <li>Components must be <strong>pure during render</strong> — no side effects, no mutation of props/state.</li>
+            <li>Custom hooks for reusable stateful logic; prefix with <code>use</code>.</li>
+          </ul>
+          <div class="do-dont">
+            <div class="do">
+              <h4>✓ Derive during render</h4>
+              <pre><code>const fullName = `${first} ${last}`;
+const visible = items.filter(i =&gt; i.active);</code></pre>
+            </div>
+            <div class="dont">
+              <h4>✗ Sync derived state via effect</h4>
+              <pre><code>useEffect(() =&gt; {
+  setFullName(`${first} ${last}`);
+}, [first, last]);</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="nextjs">
+          <h2><span class="num">03</span>Next.js — App Router</h2>
+          <ul>
+            <li><strong>Server Components by default.</strong> Add <code>"use client"</code> only at the leaf that genuinely needs interactivity or browser APIs — push it as far down the tree as possible.</li>
+            <li><strong>Fetch data in Server Components</strong>, close to where it's used. Don't lift all fetching to the page.</li>
+            <li><strong>Know the caching layers</strong> — Request Memoization, Data Cache, Full Route Cache, Router Cache. Be explicit with <code>fetch</code> options and <code>revalidateTag</code>/<code>revalidatePath</code>. Defaults changed across Next 14 → 15; know your version.</li>
+            <li><strong>Server Actions for mutations.</strong> Validate every input with Zod inside the action; treat all inputs as untrusted; never expose secrets.</li>
+            <li>Use the <strong>file conventions</strong>: <code>loading.tsx</code>, <code>error.tsx</code>, <code>not-found.tsx</code>, <code>route.ts</code>, <code>layout.tsx</code>.</li>
+            <li><strong><code>next/image</code>, <code>next/font</code>, <code>next/link</code></strong> — always. No raw <code>&lt;img&gt;</code> for content images.</li>
+            <li>Stream slow data with <code>&lt;Suspense&gt;</code> instead of blocking the route.</li>
+            <li>Keep <code>middleware.ts</code> thin — it runs on every request.</li>
+            <li>Only <code>NEXT_PUBLIC_*</code> env vars reach the client. Validate all env at startup with Zod.</li>
+          </ul>
+        </section>
+
+        <section id="typescript">
+          <h2><span class="num">04</span>TypeScript</h2>
+          <ul>
+            <li><strong><code>strict: true</code></strong> plus <code>noUncheckedIndexedAccess</code> and <code>noImplicitOverride</code>, in a shared base <code>tsconfig</code>.</li>
+            <li><strong>No <code>any</code>.</strong> Use <code>unknown</code> + narrowing. Ban <code>any</code> via lint.</li>
+            <li><strong>Validate all external data</strong> (API responses, env, form input, <code>searchParams</code>) with <strong>Zod</strong>; derive types via <code>z.infer</code>.</li>
+            <li>Type props explicitly; avoid <code>React.FC</code> — prefer a plain function with typed props.</li>
+            <li>Discriminated unions for component variants and state machines.</li>
+            <li>Co-locate types with their feature; only truly shared types go in <code>packages/types</code>.</li>
+            <li>Use <code>import type { ... }</code> for type-only imports (lint rule <code>consistent-type-imports</code>).</li>
+          </ul>
+        </section>
+
+        <section id="tooling">
+          <h2><span class="num">05</span>Tooling &amp; enforcement</h2>
+          <div class="pillrow">
+            <span class="pill">ESLint 9 flat config</span>
+            <span class="pill">typescript-eslint</span>
+            <span class="pill">eslint-plugin-react-hooks</span>
+            <span class="pill">jsx-a11y</span>
+            <span class="pill">Prettier / Biome</span>
+            <span class="pill">Husky + lint-staged</span>
+            <span class="pill">commitlint</span>
+            <span class="pill">knip</span>
+            <span class="pill">syncpack</span>
+            <span class="pill">Changesets</span>
+          </div>
+          <ul>
+            <li><strong>ESLint flat config</strong> + <code>typescript-eslint</code> + <code>eslint-plugin-react-hooks</code> + <code>jsx-a11y</code> + <code>@next/eslint-plugin-next</code>. The hooks rules are non-negotiable.</li>
+            <li><strong>Prettier</strong> for formatting — or <strong>Biome</strong> if you want lint + format in one fast tool.</li>
+            <li><strong>Enforce monorepo boundaries</strong> with <code>eslint-plugin-import</code> / <code>eslint-plugin-boundaries</code>.</li>
+            <li><strong>lint-staged + Husky</strong> (or <code>lefthook</code>) pre-commit; <strong>commitlint</strong> + Conventional Commits.</li>
+            <li><strong><code>knip</code></strong> finds unused files/exports/deps. <strong><code>syncpack</code></strong> keeps versions consistent.</li>
+            <li>CI runs <code>turbo lint check-types test build</code> with caching + <code>--filter</code> so PRs only rebuild affected packages.</li>
+          </ul>
+        </section>
+
+        <section id="state">
+          <h2><span class="num">06</span>State, data fetching &amp; styling</h2>
+          <ul>
+            <li><strong>Server state</strong> (anything from an API): fetch in Server Components, or <strong>TanStack Query</strong> for client-heavy apps. Never store server data in Redux/Zustand.</li>
+            <li><strong>Client/UI state</strong>: <code>useState</code>/<code>useReducer</code> → context → <strong>Zustand</strong> for genuinely global state. Avoid Redux without a real reason.</li>
+            <li><strong>URL as state</strong> — filters, tabs, pagination belong in <code>searchParams</code>.</li>
+            <li><strong>Styling</strong>: <strong>Tailwind CSS</strong> (share the config as a package) or CSS Modules. Avoid runtime CSS-in-JS in the App Router — prefer zero-runtime (Tailwind, CSS Modules, vanilla-extract, Panda).</li>
+            <li>For a shared component library use <strong>CVA</strong> for variants; consider <strong>shadcn/ui</strong> for <code>packages/ui</code>.</li>
+          </ul>
+        </section>
+
+        <section id="testing">
+          <h2><span class="num">07</span>Testing</h2>
+          <ul>
+            <li><strong>Vitest</strong> (or Jest) + <strong>React Testing Library</strong> — test behavior, not implementation.</li>
+            <li><strong>Playwright</strong> for E2E, per app.</li>
+            <li><strong>MSW</strong> to mock network at the boundary.</li>
+            <li>Pure functions get unit tests; Server Components/Actions get integration-style tests.</li>
+            <li>Wire tests into Turborepo so only affected packages run in CI.</li>
+            <li>Optional: <strong>Storybook</strong> for <code>packages/ui</code> + visual regression.</li>
+          </ul>
+        </section>
+
+        <section id="performance">
+          <h2><span class="num">08</span>Performance</h2>
+          <ul>
+            <li>Watch the <strong>client/server boundary</strong> — every <code>"use client"</code> ships JS. Audit with <code>@next/bundle-analyzer</code>.</li>
+            <li><code>next/dynamic</code> for heavy client-only components; lazy-load below the fold.</li>
+            <li>Optimize images (<code>next/image</code> with proper <code>sizes</code>); self-host fonts via <code>next/font</code>.</li>
+            <li>Stream with <code>&lt;Suspense&gt;</code> so slow data doesn't block first paint.</li>
+            <li>Monitor <strong>Core Web Vitals</strong> (Speed Insights / <code>useReportWebVitals</code>).</li>
+            <li>Keep <code>middleware</code> minimal — it's on the hot path.</li>
+          </ul>
+        </section>
+
+        <section id="naming">
+          <h2><span class="num">09</span>Naming &amp; file conventions</h2>
+          <table>
+            <thead><tr><th>Kind</th><th>Convention</th><th>Example</th></tr></thead>
+            <tbody>
+              <tr><td>Component files &amp; exports</td><td>PascalCase</td><td><code>UserCard.tsx</code></td></tr>
+              <tr><td>Hooks</td><td><code>useXxx.ts</code></td><td><code>useCartTotal.ts</code></td></tr>
+              <tr><td>Utils / non-component files</td><td>kebab-case (repo-wide, pick one)</td><td><code>format-date.ts</code></td></tr>
+              <tr><td>Folders</td><td>kebab-case</td><td><code>order-history/</code></td></tr>
+              <tr><td>Booleans</td><td>predicate prefix</td><td><code>isOpen</code>, <code>hasError</code></td></tr>
+              <tr><td>Workspace packages</td><td><code>@repo/*</code> scope</td><td><code>@repo/ui</code></td></tr>
+            </tbody>
+          </table>
+          <ul>
+            <li>One feature = one folder; co-locate component + test + styles + sub-components.</li>
+            <li><strong>Absolute imports</strong> via <code>tsconfig</code> <code>paths</code> (<code>@/components</code>) and workspace aliases — no <code>../../../</code>.</li>
+            <li>Export explicitly; avoid deep barrel files.</li>
+          </ul>
+        </section>
+
+        <section id="git">
+          <h2><span class="num">10</span>Git &amp; CI</h2>
+          <ul>
+            <li>Conventional Commits + <strong>Changesets</strong> for versioning/changelogs of shared packages.</li>
+            <li>PRs gated on <code>turbo lint check-types test build</code> with remote caching enabled.</li>
+            <li>Trunk-based or short-lived branches; <code>CODEOWNERS</code> per <code>apps/</code> and <code>packages/</code>.</li>
+            <li>A root <code>CONTRIBUTING.md</code> documents the structure and the "apps don't import apps" rule — that file is the enforced version of this guide.</li>
+          </ul>
+        </section>
+
+        <section id="scaffold">
+          <h2><span class="num">11</span>What this scaffold ships</h2>
+          <p>This repository was generated as a working skeleton of the practices above.</p>
+          <pre><code>turborepo-starter/
+├─ package.json              # pnpm workspaces + turbo scripts
+├─ pnpm-workspace.yaml
+├─ turbo.json                # task pipeline + cache config
+├─ prettier.config.mjs
+├─ .gitignore  .npmrc
+├─ README.md  CONTRIBUTING.md
+├─ docs/
+│  └─ best-practices.html    # this document
+├─ apps/
+│  └─ web/                   # Next.js App Router app
+└─ packages/
+   ├─ eslint-config/         # shared flat ESLint config
+   ├─ typescript-config/     # shared tsconfig bases
+   └─ ui/                    # shared component library (JIT)</code></pre>
+          <div class="callout good">
+            <span class="tag">Get started</span>
+            <code>pnpm install</code> → <code>pnpm dev</code>. CI command: <code>pnpm lint &amp;&amp; pnpm check-types &amp;&amp; pnpm build</code>.
+          </div>
+        </section>
+
+        <section id="tldr">
+          <h2>TL;DR — adoption order</h2>
+          <ol>
+            <li><code>strict</code> TypeScript + shared <code>tsconfig</code>/<code>eslint</code> config packages.</li>
+            <li><code>eslint-plugin-react-hooks</code> + <code>jsx-a11y</code> + import boundaries — enforce, don't just document.</li>
+            <li>Server Components by default; push <code>"use client"</code> to leaves.</li>
+            <li>Zod-validate every external boundary.</li>
+            <li>Correct <code>turbo.json</code> <code>inputs</code>/<code>outputs</code>/<code>env</code> for trustworthy caching.</li>
+            <li><code>knip</code> + <code>syncpack</code> so the monorepo doesn't rot.</li>
+          </ol>
+        </section>
+
+        <footer>
+          Generated as part of the <code>turborepo-starter</code> scaffold · Practices reflect
+          React 19 / Next.js 15 / Turborepo 2.x conventions · Keep this document and
+          <code>CONTRIBUTING.md</code> in sync.
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

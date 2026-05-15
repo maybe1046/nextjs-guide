@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>React + Next.js + Turborepo — Team Guide</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --fg: #1a1a1a;
+        --muted: #5a5a5a;
+        --border: #e4e4e7;
+        --accent: #2563eb;
+        --code-bg: #0f172a;
+        --code-fg: #e2e8f0;
+        --inline-bg: #f4f4f5;
+        --warn-bg: #fff7ed;
+        --warn-border: #fb923c;
+        --good-bg: #f0fdf4;
+        --good-border: #22c55e;
+        --bad-bg: #fef2f2;
+        --bad-border: #ef4444;
+        --max: 880px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b0b0c;
+          --fg: #e6e6e6;
+          --muted: #a1a1aa;
+          --border: #27272a;
+          --accent: #60a5fa;
+          --inline-bg: #1f1f23;
+          --warn-bg: #2a1a0a;
+          --good-bg: #0b1f12;
+          --bad-bg: #2a1212;
+        }
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.65;
+        color: var(--fg);
+        background: var(--bg);
+      }
+      .wrap {
+        max-width: var(--max);
+        margin: 0 auto;
+        padding: 2.5rem 1.25rem 6rem;
+      }
+      header.hero {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      h1 {
+        font-size: 2rem;
+        margin: 0 0 .25rem;
+        letter-spacing: -0.02em;
+      }
+      header.hero p { color: var(--muted); margin: .25rem 0; }
+      h2 {
+        margin-top: 3rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        font-size: 1.4rem;
+        letter-spacing: -0.01em;
+      }
+      h3 { margin-top: 2rem; font-size: 1.1rem; }
+      h4 { margin-top: 1.25rem; font-size: 1rem; color: var(--muted); }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      code, kbd, pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9em;
+      }
+      :not(pre) > code {
+        background: var(--inline-bg);
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      pre {
+        background: var(--code-bg);
+        color: var(--code-fg);
+        padding: 1rem 1.1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        line-height: 1.55;
+      }
+      pre code { background: transparent; padding: 0; }
+      .tip, .warn, .bad {
+        padding: .8rem 1rem;
+        border-left: 4px solid;
+        border-radius: 6px;
+        margin: 1rem 0;
+      }
+      .tip  { background: var(--good-bg); border-color: var(--good-border); }
+      .warn { background: var(--warn-bg); border-color: var(--warn-border); }
+      .bad  { background: var(--bad-bg);  border-color: var(--bad-border); }
+      .tip strong, .warn strong, .bad strong { display: block; margin-bottom: .25rem; }
+      .toc {
+        background: var(--inline-bg);
+        padding: 1rem 1.25rem;
+        border-radius: 8px;
+        font-size: 0.95rem;
+      }
+      .toc ol { margin: .25rem 0 0 1rem; padding: 0; }
+      .toc li { margin: .15rem 0; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+        font-size: .95rem;
+      }
+      th, td {
+        text-align: left;
+        padding: .55rem .7rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      th { background: var(--inline-bg); }
+      ul.checklist { list-style: none; padding-left: 0; }
+      ul.checklist li::before {
+        content: "☐ ";
+        color: var(--muted);
+        font-weight: 700;
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      @media (max-width: 640px) {
+        .grid-2 { grid-template-columns: 1fr; }
+      }
+      .grid-2 > div { padding: .8rem 1rem; border-radius: 6px; }
+      .grid-2 .do  { background: var(--good-bg); border-left: 4px solid var(--good-border); }
+      .grid-2 .dont { background: var(--bad-bg); border-left: 4px solid var(--bad-border); }
+      footer {
+        margin-top: 4rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: .9rem;
+      }
+      .stack {
+        display: inline-block;
+        background: var(--inline-bg);
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: .8rem;
+        margin-right: .25rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <h1>React + Next.js + Turborepo — Team Guide</h1>
+        <p>A practical baseline for how we write, structure, and ship apps.</p>
+        <p>
+          <span class="stack">Next.js 15 App Router</span>
+          <span class="stack">React 19</span>
+          <span class="stack">TypeScript 5</span>
+          <span class="stack">Turborepo</span>
+          <span class="stack">pnpm</span>
+          <span class="stack">ESLint + Prettier</span>
+        </p>
+      </header>
+
+      <nav class="toc" aria-label="Table of contents">
+        <strong>Contents</strong>
+        <ol>
+          <li><a href="#mental-model">Mental model</a></li>
+          <li><a href="#folders">File &amp; folder conventions</a></li>
+          <li><a href="#data">Data fetching &amp; mutations</a></li>
+          <li><a href="#components">Component rules</a></li>
+          <li><a href="#monorepo">Monorepo layout</a></li>
+          <li><a href="#tooling">Tooling baseline</a></li>
+          <li><a href="#caching">Caching &amp; CI</a></li>
+          <li><a href="#pr-checklist">PR checklist</a></li>
+          <li><a href="#resources">Further reading</a></li>
+        </ol>
+      </nav>
+
+      <!-- 1. MENTAL MODEL -->
+      <section id="mental-model">
+        <h2>1. Mental model</h2>
+        <p>
+          The App Router flips the default: <strong>everything is a Server Component
+          unless you opt in to client</strong>. Most of your tree should render on the
+          server, fetch its own data, and ship zero JS. Client Components are
+          <em>islands of interactivity</em> embedded in that server-rendered tree.
+        </p>
+
+        <h3>The three rules of React (memorize these)</h3>
+        <ol>
+          <li>
+            <strong>Components and hooks must be pure.</strong> No mutation of props,
+            state, or external values during render. Same inputs ⇒ same output.
+          </li>
+          <li>
+            <strong>React calls components and hooks.</strong> Never call a component
+            as a function (<code>MyComp()</code>) and never call hooks conditionally
+            or inside loops.
+          </li>
+          <li>
+            <strong>Rules of hooks.</strong> Hooks only run at the top of a Component
+            or another Hook. Use the ESLint plugin — don't argue with it.
+          </li>
+        </ol>
+
+        <h3>Server vs Client — when to switch</h3>
+        <table>
+          <thead>
+            <tr><th>Use a Server Component when…</th><th>Use a Client Component when…</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Fetching data, reading cookies, accessing the DB, rendering Markdown, anything that touches secrets.</td>
+              <td>You need <code>useState</code>, <code>useEffect</code>, event handlers, browser APIs, or third-party hooks.</td>
+            </tr>
+            <tr>
+              <td>The component is mostly static or driven by URL state.</td>
+              <td>The component is the leaf of an interactive widget (button, dropdown, form input).</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="tip">
+          <strong>Rule of thumb</strong>
+          Push <code>"use client"</code> as far down the tree as possible. A
+          <code>&lt;SubmitButton&gt;</code> can be a Client Component while the
+          surrounding form, page, and layout stay on the server.
+        </div>
+      </section>
+
+      <!-- 2. FOLDERS -->
+      <section id="folders">
+        <h2>2. File &amp; folder conventions</h2>
+        <p>
+          Colocate by feature inside <code>app/</code>. Shared building blocks live
+          at the root. Use the <code>@/</code> alias for absolute imports — never
+          relative paths that climb more than one level (<code>../../../</code> is a
+          smell).
+        </p>
+
+<pre><code>apps/web/
+├─ app/
+│  ├─ (marketing)/              # route group — does not affect URL
+│  │  └─ page.tsx
+│  ├─ dashboard/
+│  │  ├─ layout.tsx             # nested layout, preserves state on nav
+│  │  ├─ page.tsx               # Server Component
+│  │  ├─ loading.tsx            # Suspense fallback
+│  │  ├─ error.tsx              # Error boundary (must be "use client")
+│  │  └─ _components/           # feature-local, leading _ excludes from routing
+│  │     └─ revenue-chart.tsx
+│  ├─ api/
+│  │  └─ webhooks/route.ts
+│  ├─ layout.tsx                # root layout
+│  └─ globals.css
+├─ components/
+│  └─ ui/                       # shadcn-style design primitives
+│     ├─ button.tsx
+│     └─ input.tsx
+├─ lib/                         # framework-agnostic helpers
+│  ├─ db.ts
+│  └─ utils.ts
+├─ hooks/                       # cross-feature client hooks
+├─ types/
+└─ tsconfig.json                # paths: { "@/*": ["./*"] }
+</code></pre>
+
+        <h3>Naming</h3>
+        <ul>
+          <li>Files: <code>kebab-case.tsx</code>. Components: <code>PascalCase</code>. Hooks: <code>useCamelCase</code>.</li>
+          <li>One default export per route file (<code>page.tsx</code>, <code>layout.tsx</code>). Everything else uses named exports.</li>
+          <li>Co-located helpers go in <code>_components/</code> or <code>_lib/</code> (leading underscore — Next.js skips them when routing).</li>
+        </ul>
+      </section>
+
+      <!-- 3. DATA -->
+      <section id="data">
+        <h2>3. Data fetching &amp; mutations</h2>
+
+        <h3>Reads happen on the server</h3>
+        <p>
+          Fetch where the data is rendered. Don't ship a <code>useEffect</code> that
+          calls your own API route just to populate a list — the server already had
+          that data.
+        </p>
+
+<pre><code>// app/dashboard/page.tsx — Server Component
+import { db } from "@/lib/db";
+
+export default async function DashboardPage() {
+  const orders = await db.order.findMany({ take: 20 });
+  return &lt;OrderTable orders={orders} /&gt;;
+}
+</code></pre>
+
+        <h3>Writes use Server Actions</h3>
+<pre><code>// app/dashboard/actions.ts
+"use server";
+import { revalidatePath } from "next/cache";
+import { db } from "@/lib/db";
+
+export async function createOrder(formData: FormData) {
+  const sku = String(formData.get("sku"));
+  await db.order.create({ data: { sku } });
+  revalidatePath("/dashboard");
+}
+</code></pre>
+
+<pre><code>// app/dashboard/new-order-form.tsx
+"use client";
+import { useFormStatus } from "react-dom";
+import { createOrder } from "./actions";
+
+function Submit() {
+  const { pending } = useFormStatus();
+  return &lt;button disabled={pending}&gt;{pending ? "Saving…" : "Save"}&lt;/button&gt;;
+}
+
+export function NewOrderForm() {
+  return (
+    &lt;form action={createOrder}&gt;
+      &lt;input name="sku" required /&gt;
+      &lt;Submit /&gt;
+    &lt;/form&gt;
+  );
+}
+</code></pre>
+
+        <h3>Optimistic UI</h3>
+        <p>
+          For mutations where the result is predictable, use
+          <code>useOptimistic</code> + <code>useTransition</code> instead of building
+          your own pending-state machinery.
+        </p>
+
+        <div class="warn">
+          <strong>Don't reach for React Query in App Router projects by default.</strong>
+          Server Components + Server Actions cover most CRUD. Add a client cache
+          (TanStack Query, SWR) only when you have genuinely interactive client-driven
+          data — search-as-you-type, polling, optimistic lists too complex for
+          <code>useOptimistic</code>.
+        </div>
+      </section>
+
+      <!-- 4. COMPONENTS -->
+      <section id="components">
+        <h2>4. Component rules</h2>
+
+        <h3>The <code>"use client"</code> directive</h3>
+        <p>
+          It is a <em>boundary</em>, not a label. The first <code>"use client"</code>
+          file in an import chain marks the seam — every module imported from there
+          downward is bundled to the client. Put it as low as possible.
+        </p>
+
+        <div class="grid-2">
+          <div class="do">
+            <strong>Good</strong>
+<pre><code>// page.tsx — server
+import { LikeButton } from "./like-button";
+
+export default async function Post({ id }) {
+  const post = await getPost(id);
+  return (
+    &lt;article&gt;
+      &lt;h1&gt;{post.title}&lt;/h1&gt;
+      &lt;p&gt;{post.body}&lt;/p&gt;
+      &lt;LikeButton postId={id} /&gt;
+    &lt;/article&gt;
+  );
+}</code></pre>
+          </div>
+          <div class="dont">
+            <strong>Bad</strong>
+<pre><code>// page.tsx — entire page is client
+"use client";
+import { useEffect, useState } from "react";
+
+export default function Post({ id }) {
+  const [post, setPost] = useState();
+  useEffect(() =&gt; {
+    fetch(`/api/posts/${id}`).then(r =&gt; r.json()).then(setPost);
+  }, [id]);
+  // …
+}</code></pre>
+          </div>
+        </div>
+
+        <h3>Composition over context</h3>
+        <p>
+          Prefer passing Server Components as <code>children</code> into Client
+          Components rather than lifting everything into a client context. This is
+          how you keep server-rendered content inside an interactive shell.
+        </p>
+
+<pre><code>// providers.tsx — client
+"use client";
+export function Drawer({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return open ? &lt;aside&gt;{children}&lt;/aside&gt; : null;
+}
+
+// page.tsx — server
+&lt;Drawer&gt;
+  &lt;ServerOnlyContent /&gt;   {/* still rendered on the server */}
+&lt;/Drawer&gt;
+</code></pre>
+
+        <h3>Props</h3>
+        <ul>
+          <li>Type props explicitly — no implicit <code>any</code>, no <code>React.FC</code>.</li>
+          <li>No prop drilling more than two levels. If you're passing it through, restructure or use composition.</li>
+          <li>Boolean props default to <code>false</code>. Name them affirmatively (<code>disabled</code>, not <code>notEnabled</code>).</li>
+        </ul>
+      </section>
+
+      <!-- 5. MONOREPO -->
+      <section id="monorepo">
+        <h2>5. Monorepo layout</h2>
+
+<pre><code>repo/
+├─ apps/
+│  ├─ web/                      # Next.js app
+│  └─ admin/                    # second Next.js app
+├─ packages/
+│  ├─ ui/                       # shared component library
+│  ├─ db/                       # Prisma / Drizzle client
+│  ├─ config-eslint/
+│  ├─ config-tailwind/
+│  └─ tsconfig/                 # base tsconfig.json files
+├─ pnpm-workspace.yaml
+├─ turbo.json
+└─ package.json
+</code></pre>
+
+        <h3><code>pnpm-workspace.yaml</code></h3>
+<pre><code>packages:
+  - "apps/*"
+  - "packages/*"
+</code></pre>
+
+        <h3>Internal package naming</h3>
+        <p>
+          All internal packages share an <code>@yourorg/</code> namespace. Reference
+          them from apps with the <code>workspace:*</code> protocol so pnpm always
+          resolves to the local copy.
+        </p>
+
+<pre><code>// apps/web/package.json
+{
+  "name": "@yourorg/web",
+  "dependencies": {
+    "@yourorg/ui": "workspace:*",
+    "@yourorg/db": "workspace:*"
+  },
+  "devDependencies": {
+    "@yourorg/config-eslint": "workspace:*",
+    "@yourorg/tsconfig": "workspace:*"
+  }
+}
+</code></pre>
+
+        <div class="tip">
+          <strong>Internal packages: don't pre-build.</strong>
+          For most shared TypeScript packages, export <code>./src/index.ts</code>
+          directly via the <code>exports</code> field — Next.js compiles them through
+          <code>transpilePackages</code>. Skip the dual <code>tsup</code> build step
+          unless the package is published to npm.
+        </div>
+
+        <h3><code>turbo.json</code> baseline</h3>
+<pre><code>{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [".env"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "package.json", "tsconfig.json"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "lint": { "dependsOn": ["^build"] },
+    "typecheck": { "dependsOn": ["^build"] },
+    "test": { "dependsOn": ["^build"], "outputs": ["coverage/**"] },
+    "dev": { "cache": false, "persistent": true }
+  }
+}
+</code></pre>
+      </section>
+
+      <!-- 6. TOOLING -->
+      <section id="tooling">
+        <h2>6. Tooling baseline</h2>
+
+        <h3>Required <code>package.json</code> scripts (per app)</h3>
+<pre><code>{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit"
+  }
+}
+</code></pre>
+
+        <h3>Root scripts</h3>
+<pre><code>{
+  "scripts": {
+    "dev":       "turbo run dev",
+    "build":     "turbo run build",
+    "lint":      "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test":      "turbo run test",
+    "format":    "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "prepare":   "husky"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
+</code></pre>
+
+        <h3>ESLint (flat config) — shared package</h3>
+<pre><code>// packages/config-eslint/index.mjs
+import js from "@eslint/js";
+import tseslint from "typescript-eslint";
+import reactHooks from "eslint-plugin-react-hooks";
+import nextPlugin from "@next/eslint-plugin-next";
+import prettier from "eslint-config-prettier";
+
+export default tseslint.config(
+  { ignores: [".next/**", "dist/**", "node_modules/**"] },
+  js.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
+  {
+    plugins: { "react-hooks": reactHooks, "@next/next": nextPlugin },
+    languageOptions: {
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname }
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-misused-promises": "error",
+      "@typescript-eslint/consistent-type-imports": "error",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }
+      ]
+    }
+  },
+  prettier
+);
+</code></pre>
+
+<pre><code>// apps/web/eslint.config.mjs
+import config from "@yourorg/config-eslint";
+export default config;
+</code></pre>
+
+        <h3>Prettier</h3>
+<pre><code>// .prettierrc.json (at repo root)
+{
+  "semi": true,
+  "singleQuote": false,
+  "trailingComma": "all",
+  "printWidth": 100,
+  "plugins": ["prettier-plugin-tailwindcss"]
+}
+</code></pre>
+
+        <h3>TypeScript — strict baseline</h3>
+<pre><code>// packages/tsconfig/base.json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
+    "incremental": true
+  }
+}
+</code></pre>
+
+        <h3>Pre-commit hook (Husky + lint-staged)</h3>
+<pre><code>// package.json
+{
+  "lint-staged": {
+    "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+    "*.{json,md,css}": ["prettier --write"]
+  }
+}
+</code></pre>
+
+<pre><code># .husky/pre-commit
+pnpm exec lint-staged
+</code></pre>
+      </section>
+
+      <!-- 7. CACHING & CI -->
+      <section id="caching">
+        <h2>7. Caching &amp; CI</h2>
+
+        <h3>Make tasks cacheable</h3>
+        <ul>
+          <li>Declare <code>inputs</code> narrowly — don't include <code>README.md</code> or unrelated files; touching them invalidates the cache.</li>
+          <li>Declare <code>outputs</code> precisely — Turbo only restores what you list. For Next.js: <code>".next/**", "!.next/cache/**"</code>.</li>
+          <li>Anything that mutates state (<code>dev</code>, <code>start</code>) must set <code>"cache": false</code>.</li>
+        </ul>
+
+        <h3>Remote cache</h3>
+        <p>
+          Enable Vercel Remote Cache (or a self-hosted one) so CI and every
+          teammate's laptop share build artifacts. A first-time PR build that takes
+          8 minutes becomes ~30 seconds after the first hit.
+        </p>
+
+<pre><code># on a dev machine
+pnpm dlx turbo login
+pnpm dlx turbo link
+</code></pre>
+
+        <h3>CI: affected-only</h3>
+<pre><code># .github/workflows/ci.yml (excerpt)
+- run: pnpm install --frozen-lockfile
+- run: pnpm turbo run lint typecheck test build --filter="...[origin/main]"
+  env:
+    TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+    TURBO_TEAM:  ${{ vars.TURBO_TEAM }}
+</code></pre>
+
+        <div class="tip">
+          <strong>Filter syntax cheat sheet</strong>
+          <code>--filter=@yourorg/web</code> (one package),
+          <code>--filter=@yourorg/web...</code> (package + its deps),
+          <code>--filter=...[origin/main]</code> (only what changed since main).
+        </div>
+      </section>
+
+      <!-- 8. PR CHECKLIST -->
+      <section id="pr-checklist">
+        <h2>8. PR checklist</h2>
+        <p>Every PR should pass this before requesting review.</p>
+        <ul class="checklist">
+          <li><code>pnpm typecheck</code> passes — no <code>any</code>, no <code>@ts-ignore</code> without a comment explaining why.</li>
+          <li><code>pnpm lint</code> passes with zero warnings (<code>--max-warnings 0</code>).</li>
+          <li><code>pnpm test</code> passes locally.</li>
+          <li>No orphaned <code>"use client"</code> directives — every client file actually needs hooks, events, or browser APIs.</li>
+          <li>No client-side <code>fetch</code> of data the server could have rendered.</li>
+          <li>No <code>useEffect</code> for derived state (compute it during render) or for data fetching (use a Server Component or Server Action).</li>
+          <li>No new dependency without a one-line justification in the PR description.</li>
+          <li>Server Actions validate input (Zod / Valibot) — never trust <code>FormData</code> directly.</li>
+          <li>Secrets read via <code>process.env.X</code> only inside server code; <code>NEXT_PUBLIC_</code> only for genuinely public values.</li>
+          <li>Loading and error states exist (<code>loading.tsx</code> / <code>error.tsx</code>) for any new route segment.</li>
+          <li>Accessibility: form inputs have labels, interactive elements are real <code>&lt;button&gt;</code>s, images have <code>alt</code>.</li>
+          <li>Screenshots or a short Loom for any UI change.</li>
+        </ul>
+      </section>
+
+      <!-- 9. RESOURCES -->
+      <section id="resources">
+        <h2>9. Further reading</h2>
+
+        <h4>Primary sources</h4>
+        <ul>
+          <li><a href="https://react.dev/reference/rules">React — Rules of React</a></li>
+          <li><a href="https://react.dev/blog/2024/12/05/react-19">React 19 release notes</a></li>
+          <li><a href="https://nextjs.org/docs/app">Next.js App Router docs</a></li>
+          <li><a href="https://nextjs.org/docs/app/getting-started/project-structure">Next.js Project Structure</a></li>
+          <li><a href="https://nextjs.org/docs/app/guides">Next.js App Router Guides</a></li>
+          <li><a href="https://turborepo.dev/docs/crafting-your-repository/structuring-a-repository">Turborepo — Structuring a repository</a></li>
+        </ul>
+
+        <h4>Reference architectures</h4>
+        <ul>
+          <li><a href="https://github.com/alan2207/bulletproof-react">bulletproof-react</a></li>
+          <li><a href="https://ui.shadcn.com/docs/monorepo">shadcn/ui — Monorepo</a></li>
+          <li><a href="https://github.com/t3-oss/create-t3-turbo">create-t3-turbo</a></li>
+          <li><a href="https://vercel.com/templates">Vercel templates</a></li>
+        </ul>
+
+        <h4>Tooling</h4>
+        <ul>
+          <li><a href="https://typescript-eslint.io/">typescript-eslint (flat config)</a></li>
+          <li><a href="https://www.typescriptlang.org/docs/handbook/declaration-files/do-s-and-don-ts.html">TypeScript — Do's and Don'ts</a></li>
+          <li><a href="https://www.totaltypescript.com/tips">Total TypeScript tips</a></li>
+          <li><a href="https://pnpm.io/workspaces">pnpm workspaces</a></li>
+        </ul>
+      </section>
+
+      <footer>
+        Internal team guide. PRs welcome — keep additions short, link to a primary
+        source, and prefer deleting outdated advice over piling on caveats.
+      </footer>
+    </div>
+  </body>
+</html>

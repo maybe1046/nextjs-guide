@@ -1,0 +1,25 @@
+# dependencies
+node_modules
+
+# build outputs
+.next
+out
+dist
+build
+
+# turborepo
+.turbo
+
+# testing
+coverage
+
+# misc
+*.log
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# env files
+.env
+.env*.local
