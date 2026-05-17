@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Verifying Human Changes against CONTRIBUTING.md with AI Code Agents</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --panel: #161b22;
+        --panel-2: #1c2330;
+        --border: #2d333b;
+        --text: #c9d1d9;
+        --text-dim: #8b949e;
+        --heading: #f0f6fc;
+        --accent: #58a6ff;
+        --accent-2: #7ee787;
+        --warn: #f0b849;
+        --code-bg: #1e242c;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        line-height: 1.65;
+        font-size: 16px;
+      }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .layout { display: flex; max-width: 1280px; margin: 0 auto; }
+      nav {
+        position: sticky;
+        top: 0;
+        align-self: flex-start;
+        width: 280px;
+        height: 100vh;
+        overflow-y: auto;
+        padding: 32px 20px;
+        border-right: 1px solid var(--border);
+        flex-shrink: 0;
+        font-size: 14px;
+      }
+      nav h2 {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+        margin: 0 0 12px;
+      }
+      nav ol { list-style: none; margin: 0 0 24px; padding: 0; }
+      nav ol li { margin: 2px 0; }
+      nav ol a {
+        display: block;
+        padding: 5px 10px;
+        border-radius: 6px;
+        color: var(--text-dim);
+      }
+      nav ol a:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
+      main { flex: 1; min-width: 0; padding: 48px 56px 120px; }
+      header.hero { margin-bottom: 48px; }
+      header.hero .kicker {
+        color: var(--accent-2);
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 0.04em;
+      }
+      h1 {
+        font-size: 38px;
+        line-height: 1.2;
+        color: var(--heading);
+        margin: 8px 0 12px;
+      }
+      .subtitle { color: var(--text-dim); font-size: 18px; max-width: 70ch; }
+      section { margin-bottom: 56px; scroll-margin-top: 32px; }
+      h2 {
+        font-size: 26px;
+        color: var(--heading);
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 10px;
+        margin: 0 0 20px;
+      }
+      h2 .num {
+        font-family: var(--mono);
+        color: var(--accent);
+        font-size: 18px;
+        margin-right: 10px;
+      }
+      h3 {
+        font-size: 18px;
+        color: var(--heading);
+        margin: 28px 0 10px;
+      }
+      h3 .stage {
+        font-family: var(--mono);
+        color: var(--accent-2);
+        font-size: 13px;
+        margin-right: 8px;
+      }
+      p { margin: 12px 0; }
+      ul { padding-left: 22px; }
+      li { margin: 6px 0; }
+      strong { color: var(--heading); }
+      code {
+        font-family: var(--mono);
+        font-size: 0.86em;
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 1px 5px;
+        color: #e6c07b;
+      }
+      pre {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px 18px;
+        overflow-x: auto;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+      pre code {
+        background: none;
+        border: none;
+        padding: 0;
+        color: var(--text);
+        font-size: 13px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        font-size: 14.5px;
+      }
+      th, td {
+        border: 1px solid var(--border);
+        padding: 9px 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th { background: var(--panel-2); color: var(--heading); }
+      tr:nth-child(even) td { background: var(--panel); }
+      .callout {
+        border-left: 3px solid var(--accent);
+        background: var(--panel);
+        padding: 12px 16px;
+        border-radius: 0 8px 8px 0;
+        margin: 16px 0;
+      }
+      .callout.warn { border-left-color: var(--warn); }
+      .callout.good { border-left-color: var(--accent-2); }
+      .callout .tag {
+        font-family: var(--mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+        display: block;
+        margin-bottom: 4px;
+      }
+      .pillrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+      .pill {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 13px;
+        font-family: var(--mono);
+      }
+      .badge {
+        font-family: var(--mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-radius: 5px;
+        padding: 2px 7px;
+        white-space: nowrap;
+      }
+      .badge.block { background: rgba(248, 81, 73, 0.14); color: #f85149; border: 1px solid #f8514940; }
+      .badge.advise { background: rgba(240, 184, 73, 0.12); color: var(--warn); border: 1px solid #f0b84940; }
+      footer {
+        border-top: 1px solid var(--border);
+        margin-top: 64px;
+        padding-top: 24px;
+        color: var(--text-dim);
+        font-size: 14px;
+      }
+      @media (max-width: 900px) {
+        nav { display: none; }
+        main { padding: 32px 24px 80px; }
+        h1 { font-size: 30px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <nav>
+        <h2>Contents</h2>
+        <ol>
+          <li><a href="#inputs">00 · How the agent gets its inputs</a></li>
+          <li><a href="#stages">01 · Approaches by workflow stage</a></li>
+          <li><a href="#blocks">02 · Cross-cutting building blocks</a></li>
+          <li><a href="#gating">03 · Advisory vs. blocking</a></li>
+          <li><a href="#split">04 · Agent vs. deterministic</a></li>
+          <li><a href="#recommendation">TL;DR · Recommendation</a></li>
+        </ol>
+      </nav>
+      <main>
+        <header class="hero">
+          <span class="kicker">// agent-assisted code review</span>
+          <h1>Verifying Human Changes<br />against <code>CONTRIBUTING.md</code></h1>
+          <p class="subtitle">
+            Approaches for inserting an AI code agent as a <strong>gatekeeper</strong> that
+            verifies pull requests and commits authored by human developers against the rules in
+            <a href="../CONTRIBUTING.md"><code>CONTRIBUTING.md</code></a>. The agent never authors
+            the change &mdash; it only reviews it. The organising axis is <em>where in the
+            workflow</em> the check runs; each point is a place to install a verification gate.
+          </p>
+        </header>
+
+        <section id="inputs">
+          <h2><span class="num">00</span>How the agent gets its inputs</h2>
+          <p>Every approach below feeds the agent the same three things:</p>
+          <table>
+            <thead><tr><th>Input</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr><td>The change</td><td><code>git diff --staged</code>, <code>git diff main...HEAD</code>, or <code>gh pr diff &lt;n&gt;</code> / the PR API.</td></tr>
+              <tr><td>The rules</td><td><code>CONTRIBUTING.md</code>, plus <code>docs/best-practices.html</code> for the <em>why</em> behind borderline calls.</td></tr>
+              <tr><td>The output</td><td>Structured findings keyed to section numbers (&sect;1&ndash;&sect;9), each with a severity and an overall pass/fail verdict.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="stages">
+          <h2><span class="num">01</span>Approaches by workflow stage</h2>
+          <p>
+            Ordered earliest to latest. A <span class="badge advise">advisory</span> stage informs
+            but cannot stop a change; a <span class="badge block">blocking</span> stage can reject it.
+          </p>
+
+          <h3><span class="stage">stage 1</span>In-editor &mdash; as the human types <span class="badge advise">advisory</span></h3>
+          <ul>
+            <li><strong>IDE extension review</strong> (VS Code / JetBrains Claude Code) &mdash; the agent reviews the working diff in the editor before any commit. Earliest possible feedback, but purely advisory.</li>
+          </ul>
+
+          <h3><span class="stage">stage 2</span>Pre-commit &mdash; local git hook invoking a headless agent <span class="badge block">blocking</span></h3>
+          <ul>
+            <li><strong><code>pre-commit</code> hook &rarr; <code>claude -p</code></strong> (wired via husky or lefthook): the hook runs the agent over <code>git diff --staged</code> and exits non-zero on violations, blocking the commit locally.</li>
+            <li><strong><code>commit-msg</code> hook &rarr; agent</strong>: verify the message against Conventional Commits (&sect;2) &mdash; though <code>commitlint</code> does this deterministically and far more cheaply.</li>
+          </ul>
+
+          <h3><span class="stage">stage 3</span>Pre-push &mdash; local git hook invoking a headless agent <span class="badge block">blocking</span></h3>
+          <ul>
+            <li><strong><code>pre-push</code> hook &rarr; <code>claude -p</code></strong>: reviews the whole branch diff (<code>git diff main...HEAD</code>) before it leaves the machine. Catches what per-commit review misses &mdash; e.g. &sect;1 cross-package import boundaries that are only visible across multiple files.</li>
+          </ul>
+
+          <h3><span class="stage">stage 4</span>On-demand &mdash; inside the developer's own Claude Code session <span class="badge advise">advisory</span></h3>
+          <ul>
+            <li><strong>Custom slash command</strong> &mdash; <code>/check-contributing</code> the developer runs before pushing; diffs their branch against the rulebook.</li>
+            <li><strong>Custom subagent</strong> &mdash; a <code>contributing-reviewer</code> agent invoked with clean context for an unbiased audit.</li>
+            <li><strong>Skill</strong> &mdash; a <code>contributing-enforcer</code> skill that auto-triggers when relevant files are staged.</li>
+            <li><strong>Built-in <code>/review</code></strong> &mdash; pointed at <code>CONTRIBUTING.md</code>.</li>
+          </ul>
+
+          <h3><span class="stage">stage 5</span>PR-time CI &mdash; agent reviews the pull request <span class="badge block">blocking</span></h3>
+          <ul>
+            <li><strong>GitHub Actions + Claude Code Action</strong> on <code>pull_request</code> &mdash; the agent reviews the PR diff, posts <strong>inline review comments</strong> citing &sect;-numbers, and sets a check status.</li>
+            <li><strong>GitLab CI / Bitbucket Pipelines / Jenkins</strong> &mdash; the same pattern, running <code>claude -p</code> in headless mode inside the pipeline.</li>
+            <li><strong>Required status check + branch protection</strong> &mdash; make that agent job a <em>required</em> check so the merge is blocked until it passes. This is the only setup that truly <em>forces</em> the rules on human contributors.</li>
+          </ul>
+
+          <h3><span class="stage">stage 6</span>PR via mention / bot <span class="badge advise">advisory</span></h3>
+          <ul>
+            <li><strong><code>@claude</code> mention</strong> &mdash; the author or a human reviewer pings the Claude GitHub App to request a review against the rulebook.</li>
+            <li><strong>Auto-review bot</strong> &mdash; a bot posts a review automatically on every PR open / update.</li>
+          </ul>
+
+          <h3><span class="stage">stage 7</span>Server-side &mdash; before the push is even accepted <span class="badge block">blocking</span></h3>
+          <ul>
+            <li><strong><code>pre-receive</code> hook</strong> on a self-hosted git server (GitHub Enterprise / GitLab / Gitea) &rarr; headless agent. Rejects the push server-side; humans cannot bypass it by skipping local hooks with <code>--no-verify</code>.</li>
+          </ul>
+
+          <h3><span class="stage">stage 8</span>Post-merge / scheduled <span class="badge advise">advisory</span></h3>
+          <ul>
+            <li><strong>Cron / scheduled agent</strong> &mdash; periodically audits <code>main</code> or recently merged PRs against <code>CONTRIBUTING.md</code>. Catches drift and code merged before enforcement existed; opens issues for violations.</li>
+          </ul>
+        </section>
+
+        <section id="blocks">
+          <h2><span class="num">02</span>Cross-cutting building blocks</h2>
+          <ul>
+            <li><strong>Headless wrapper (Claude Agent SDK / <code>claude -p</code>)</strong> &mdash; wrap the agent so it takes a diff plus the rulebook and emits structured pass/fail JSON. This <em>one</em> component plugs into stages 2, 3, 5, 7 and 8.</li>
+            <li><strong>MCP server</strong> &mdash; exposes a <code>validate-against-contributing</code> tool that any MCP-capable agent can call.</li>
+          </ul>
+        </section>
+
+        <section id="gating">
+          <h2><span class="num">03</span>Advisory vs. blocking &mdash; what actually forces the rules</h2>
+          <p>
+            Stages 1, 4, 6 and 8 are <strong>advisory</strong> &mdash; they inform but do not stop
+            anything. Stages 2, 3, 5 and 7 can <strong>block</strong>. But only a
+            <strong>required CI check (stage 5)</strong> or a <strong><code>pre-receive</code> hook
+            (stage 7)</strong> is genuinely unbypassable by a human &mdash; local git hooks can
+            always be skipped with <code>git commit --no-verify</code>.
+          </p>
+          <div class="callout warn">
+            <span class="tag">Pick your gate deliberately</span>
+            If the goal is enforcement and not just a hint, the verification must live somewhere the
+            developer cannot opt out of. That means the server: a required PR check or a
+            <code>pre-receive</code> hook.
+          </div>
+        </section>
+
+        <section id="split">
+          <h2><span class="num">04</span>Agent vs. deterministic &mdash; don't pay for what a linter does free</h2>
+          <p>
+            Route the lintable subset of <code>CONTRIBUTING.md</code> to deterministic tools, and
+            give the agent only the judgment calls. Run the deterministic gate <em>first</em>, then
+            let the agent review what remains &mdash; cheaper, and its findings won't drown in lint noise.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Deterministic (ESLint / tsc / commitlint)</th>
+                <th>Needs an AI agent (judgment)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>&sect;5 no <code>any</code>, <code>import type</code></td>
+                <td>&sect;1 import-boundary <em>intent</em>; cross-feature reach-ins</td>
+              </tr>
+              <tr>
+                <td>&sect;2 Conventional Commit format</td>
+                <td>&sect;3 "<code>useEffect</code> only for synchronisation"</td>
+              </tr>
+              <tr>
+                <td>&sect;8 naming patterns</td>
+                <td>&sect;4 "<code>&quot;use client&quot;</code> pushed as far down as possible"</td>
+              </tr>
+              <tr>
+                <td>&sect;5 strict-mode flags</td>
+                <td>&sect;7 "a bug fix has a test that fails without the fix"</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="recommendation">
+          <h2><span class="num">TL;DR</span>Recommendation for this repo</h2>
+          <p>The highest-leverage setup, in order:</p>
+          <div class="pillrow">
+            <span class="pill">1 · headless wrapper</span>
+            <span class="pill">2 · required PR check</span>
+            <span class="pill">3 · deterministic gate first</span>
+          </div>
+          <ol>
+            <li>Build the <strong>headless wrapper</strong> once &mdash; it is reused by every blocking stage.</li>
+            <li>Wire <strong>stage 5 as a required status check</strong> &mdash; this forces the rules on every human PR and is the only unbypassable gate that fits a GitHub-hosted repo.</li>
+            <li>Run ESLint / <code>tsc</code> / <code>commitlint</code> <strong>before</strong> the agent so it only judges the rules a linter cannot.</li>
+          </ol>
+          <div class="callout good">
+            <span class="tag">Next step</span>
+            Scaffold the GitHub Actions workflow that runs the deterministic gate, then the headless
+            agent review, and reports a single required status check on every pull request.
+          </div>
+        </section>
+
+        <footer>
+          Companion to <a href="../CONTRIBUTING.md"><code>CONTRIBUTING.md</code></a> and
+          <a href="best-practices.html"><code>docs/best-practices.html</code></a>.
+          Scope: AI code agents verifying changes authored by human developers.
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
